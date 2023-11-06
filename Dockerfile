@@ -1,12 +1,19 @@
 ARG BUILDPLATFORM
 FROM ${BUILDPLATFORM}alpine:3
 
+ARG AZ_VERSION
 ARG KUBE_VERSION
 ARG HELM_VERSION
 ARG TARGETOS
 ARG TARGETARCH
 ARG YQ_VERSION
 
+# install azure cli
+RUN apk add --no-cache --update python3 py3-pip \
+    && apk add --no-cache --update --virtual=build gcc musl-dev python3-dev libffi-dev openssl-dev cargo make \
+    && pip3 install --no-cache-dir --prefer-binary azure-cli==${AZ_VERSION} && apk del build
+
+# install kubectl and helm
 RUN apk -U upgrade \
     && apk add --no-cache ca-certificates bash git openssh curl gettext jq \
     && wget -q https://storage.googleapis.com/kubernetes-release/release/v${KUBE_VERSION}/bin/${TARGETOS}/${TARGETARCH}/kubectl -O /usr/local/bin/kubectl \
