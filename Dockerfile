@@ -9,9 +9,18 @@ ARG TARGETARCH
 ARG YQ_VERSION
 
 # install azure cli
-RUN apk add --no-cache --update python3 py3-pip \
-    && apk add --no-cache --update --virtual=build gcc musl-dev python3-dev libffi-dev openssl-dev cargo make \
-    && pip3 install --no-cache-dir --prefer-binary azure-cli==${AZ_VERSION} && apk del build
+# GitHub issue azure cli: https://github.com/Azure/azure-cli/issues/19591
+# Python venv in Dockerfile: https://pythonspeed.com/articles/activate-virtualenv-dockerfile/
+RUN apk add py3-pip
+RUN apk add gcc musl-dev python3-dev libffi-dev openssl-dev cargo make
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv ${VIRTUAL_ENV}
+ENV PATH="${VIRTUAL_ENV}/bin:$PATH"
+RUN pip install --upgrade pip
+RUN pip install azure-cli==${AZ_VERSION}
+
+# install azure cli extension
+RUN az extension add -n connectedk8s
 
 # install kubectl and helm
 RUN apk -U upgrade \
